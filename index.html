@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>confes | menepati janji</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* Hindari seleksi teks agar lebih mulus */
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #ff9a9e 0%, #fad0c4 50%, #fad0c4 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Quicksand', system-ui, -apple-system, 'Poppins', 'Cantarell', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* container utama */
+        .love-card {
+            background: rgba(255, 248, 245, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 72px 48px 72px 48px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.6);
+            padding: 2rem 2rem 2.2rem;
+            text-align: center;
+            width: 90%;
+            max-width: 460px;
+            transition: all 0.3s ease;
+            margin: 1rem;
+        }
+
+        /* area hati pusat */
+        .heart-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0 25px 0;
+            cursor: pointer;
+            transform: scale(1);
+            transition: transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+
+        .heart-wrapper:active {
+            transform: scale(0.94);
+        }
+
+        /* gambar hati utama (SVG) */
+        .main-heart {
+            width: 130px;
+            height: 130px;
+            filter: drop-shadow(0 12px 18px rgba(220, 60, 80, 0.4));
+            transition: all 0.2s;
+        }
+
+        .main-heart:hover {
+            filter: drop-shadow(0 0 12px #ff3366);
+        }
+
+        /* area teks janji (muncul setelah klik) */
+        .janji-text {
+            margin-top: 30px;
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #b13e5c;
+            background: rgba(255, 255, 240, 0.7);
+            padding: 18px 14px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.5px;
+            line-height: 1.45;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            font-family: 'Quicksand', 'Segoe UI', cursive;
+        }
+
+        .janji-text.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* nama pendek Nanaw (muncul tiba-tiba) */
+        .pop-name {
+            font-size: 2.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff4d6d, #ff8c94);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 8px rgba(255, 80, 120, 0.3);
+            margin: 8px 0 4px;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: gentlePop 0.45s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+        }
+
+        /* animasi muncul nama */
+        @keyframes gentlePop {
+            0% {
+                opacity: 0;
+                transform: scale(0.6);
+            }
+            70% {
+                opacity: 1;
+                transform: scale(1.08);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* container untuk love floating (animasi love kecil) */
+        .floating-love-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        .mini-love {
+            position: absolute;
+            font-size: 20px;
+            user-select: none;
+            animation: floatLove 1.2s ease-out forwards;
+            pointer-events: none;
+            filter: drop-shadow(0 0 3px #ff99aa);
+        }
+
+        @keyframes floatLove {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(0.6) rotate(0deg);
+            }
+            40% {
+                opacity: 1;
+                transform: translate(var(--x-end, 30px), -70px) scale(1.2) rotate(15deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--x-end, 60px), -180px) scale(0.8) rotate(25deg);
+            }
+        }
+
+        /* pesan bawah romantis */
+        .footer-note {
+            margin-top: 28px;
+            font-size: 0.75rem;
+            color: #c96b7e;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        /* state awal: hanya hati & petunjuk */
+        .instruction {
+            font-size: 0.85rem;
+            background: rgba(255,235,225,0.7);
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 40px;
+            margin-top: 10px;
+            color: #d25f7a;
+        }
+
+        button {
+            background: none;
+            border: none;
+        }
+
+        /* efek kilau hati */
+        @keyframes pulseGlow {
+            0% { filter: drop-shadow(0 0 2px #ff99aa);}
+            100% { filter: drop-shadow(0 0 15px #ff4d6d);}
+        }
+    </style>
+</head>
+<body>
+
+<div class="love-card">
+    <!-- area hati bisa diklik -->
+    <div class="heart-wrapper" id="heartTrigger">
+        <!-- Hati SVG yang indah -->
+        <svg class="main-heart" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff3366" stroke="#ffc0cb" stroke-width="0.6"/>
+        </svg>
+    </div>
+
+    <!-- tempat munculnya nama "nanaw" pendek setelah klik -->
+    <div id="nameContainer" style="min-height: 70px;"></div>
+
+    <!-- Teks janji akan muncul setelah klik hati + animasi love -->
+    <div id="janjiBox" class="janji-text">
+        aku ga tau bagaimana setelah kamu melihat ini <br>
+        aku hanya ingin menepati janji 
+    </div>
+    <div class="footer-note">
+        sentuh hati nya pendek
+    </div>
+    <div class="instruction" id="hintText">
+         tekan hati untuk memulai 
+    </div>
+</div>
+
+<div class="floating-love-container" id="loveContainer"></div>
+
+<script>
+    (function() {
+        // ----- elemen DOM -----
+        const heartTrigger = document.getElementById('heartTrigger');
+        const nameContainer = document.getElementById('nameContainer');
+        const janjiBox = document.getElementById('janjiBox');
+        const hintText = document.getElementById('hintText');
+        const loveContainer = document.getElementById('loveContainer');
+
+        // state untuk mencegah spam berlebihan? Tapi kita ingin setiap klik hati tetap muncul love dan nama (jika sudah ada, tidak perlu duplikat nama berulang?)
+        // namun sesuai mood percintaan: setiap kali hati di klik, akan menampilkan nama "nanaw" pendek (bisa muncul lagi jika belum ada, atau jika sudah ada bisa refresh animasi?)
+        // Agar terasa manis, kita buat: saat pertama kali klik, muncul nama "Nanaw" dengan animasi, dan love kecil2, lalu teks janji muncul.
+        // Jika sudah pernah muncul, klik hati lagi akan tetap memunculkan love2 kecil baru, dan bisa refresh animasi nama (atau buat efek tambahan).
+        // Supaya lebih hidup: setiap klik hati, akan menambah love floating, dan jika nama belum ada (atau dihapus?), kita buat ulang namanya dengan animasi pop.
+        // Tapi jangan menghilangkan nama, biarkan dia tetap terlihat. Namun jika diklik berulang, kita bisa membuat efek "getaran" kecil pada nama, plus love tambahan.
+        // Biar romantis: klik berapa kali pun, hati akan selalu mengeluarkan love kecil dan nama "Nanaw" tetap manis di layar.
+        // Untuk teks janji: muncul pertama kali setelah klik pertama, kemudian tidak hilang. Tapi kalau belum klik, teks belum terlihat.
+        // Skenario: 
+        // - Saat load: nama belum ada, janjiBox tersembunyi.
+        // - Klik hati: 
+        //    1) Hapus nama sebelumnya jika ada? Biar fresh? tapi lebih baik jika nama sudah ada, kita hilangkan dulu lalu muncul ulang (efek muncul kembali)
+        //       supaya memenuhi "di pencet muncul nama nanaw pendek" => setiap pencetan, muncul nama dengan animasi.
+        //    2) Menampilkan teks janji (jika belum ditampilkan) atau tetap tampil.
+        //    3) Membuat banyak love kecil2 yang terbang dari sekitar hati.
+        // Kita implementasikan dengan cara: setiap klik hati, kita buat ulang elemen nama (hapus lalu tambah baru) agar muncul animasi lagi.
+        // Tapi jika cepat2 di klik, animasi bisa overlapping, namun tetap manis.
+
+        let isFirstClick = true;   // untuk memastikan teks janji baru muncul sekali? Tapi user tetap bisa lihat teks setelah klik pertama, dan tidak akan hilang. 
+        // Namun jika user belum klik, teks belum muncul. Setelah klik pertama teks akan muncul. Klik berikutnya hanya menghasilkan love + refresh nama.
+        // Tapi sesuai permintaan: setelah pencet hati muncul nama, love keluar kecil-kecil, lalu muncul text janji. 
+        // Untuk memenuhi "lalu muncul text", kita pastikan text janji muncul setelah aksi klik (bisa langsung bersama nama).
+        // Tapi tidak masalah, kita buat setelah klik hati, nama muncul, love2 terbang, kemudian teks janji muncul (tapi teks janji muncul pertama kali saja).
+        // Karena jika teks sudah ada, tidak perlu dimunculkan lagi agar tidak mengganggu. tapi jika di klik lagi, teks tetap terlihat (sudah terlihat). itu tetap sesuai.
+        // Untuk lebih dramatis: teks janji akan muncul dengan fade-in hanya sekali seumur hidup halaman ini. setelah itu jika diklik lagi, love dan nama tetap ada.
+
+        // Fungsi membuat love kecil random
+        function createMiniLoves(clickX, clickY) {
+            // Jumlah love antara 12 sampai 22 biar rame
+            const loveCount = Math.floor(Math.random() * 15) + 12; // 12~26
+            for (let i = 0; i < loveCount; i++) {
+                const loveSpan = document.createElement('div');
+                loveSpan.classList.add('mini-love');
+                // pilihan icon love yang lucu
+                const loveIcons = ['❤️', '💖', '💗', '💓', '💕', '💞', '❣️', '💘', '💝'];
+                const randomIcon = loveIcons[Math.floor(Math.random() * loveIcons.length)];
+                loveSpan.innerHTML = randomIcon;
+                // Ukuran bervariasi
+                const size = Math.floor(Math.random() * 18) + 16; // 16px ~ 34px
+                loveSpan.style.fontSize = size + 'px';
+                
+                // Posisi awal dekat area hati (menggunakan koordinat klik jika memungkinkan, atau dari pusat hati)
+                // ambil posisi relatif dari container klik atau dari tengah layar? karena heartTrigger punya area.
+                let baseX = clickX;
+                let baseY = clickY;
+                if (!baseX || !baseY) {
+                    // fallback: posisi tengah dari elemen heart
+                    const rect = heartTrigger.getBoundingClientRect();
+                    baseX = rect.left + rect.width / 2;
+                    baseY = rect.top + rect.height / 2;
+                }
+                // offset random dalam radius 40px
+                const offsetX = (Math.random() - 0.5) * 70;
+                const offsetY = (Math.random() - 0.5) * 50;
+                loveSpan.style.left = (baseX + offsetX) + 'px';
+                loveSpan.style.top = (baseY + offsetY) + 'px';
+                
+                // arah terbang random
+                const xEnd = (Math.random() - 0.5) * 140;  // -70 ~ 70
+                loveSpan.style.setProperty('--x-end', xEnd + 'px');
+                // durasi sedikit variatif
+                const duration = 0.9 + Math.random() * 0.8;
+                loveSpan.style.animation = `floatLove ${duration}s ease-out forwards`;
+                
+                loveContainer.appendChild(loveSpan);
+                // hapus setelah animasi selesai agar tidak memori penuh
+                setTimeout(() => {
+                    if (loveSpan && loveSpan.remove) loveSpan.remove();
+                }, duration * 1000);
+            }
+        }
+
+        // fungsi untuk menampilkan nama "Nanaw" dengan gaya pendek dan animasi
+        function showNameNanaw() {
+            // hapus nama yang lama jika ada untuk memicu animasi ulang
+            const oldNameDiv = document.getElementById('dynamicNanawName');
+            if (oldNameDiv) {
+                oldNameDiv.remove();
+            }
+            const nameDiv = document.createElement('div');
+            nameDiv.id = 'dynamicNanawName';
+            nameDiv.className = 'pop-name';
+            // nama pendek nanaw ( huruf kapital manis )
+            nameDiv.innerText = ' nanaw ceboll ';
+            nameContainer.appendChild(nameDiv);
+            // otomatis animasi sudah jalan via CSS, namun jika ingin pastikan hapus class dan reflow
+            // sudah bagus
+        }
+
+        // fungsi untuk menampilkan teks janji (hanya sekali)
+        let textRevealed = false;
+        function revealJanjiText() {
+            if (!textRevealed) {
+                janjiBox.classList.add('show');
+                textRevealed = true;
+                // ubah hint text menjadi sesuatu yang manis
+                if (hintText) {
+                    hintText.innerHTML = ' janji telah terukir ';
+                    hintText.style.opacity = '0.9';
+                    hintText.style.transition = '0.3s';
+                }
+            }
+        }
+
+        // handle klik hati
+        function onHeartClick(event) {
+            // Dapatkan koordinat klik untuk efek love
+            let clientX, clientY;
+            if (event.touches) {
+                // untuk sentuhan mobile
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            // Jika event tidak membawa koordinat (misal dari trigger area), pakai bounding rect
+            let finalX = clientX, finalY = clientY;
+            if (!finalX || !finalY) {
+                const rect = heartTrigger.getBoundingClientRect();
+                finalX = rect.left + rect.width / 2;
+                finalY = rect.top + rect.height / 2;
+            }
+            
+            // 1. Munculkan nama "Nanaw" (pendek dan manis)
+            showNameNanaw();
+            
+            // 2. Buat love love kecil keluar (banyak)
+            createMiniLoves(finalX, finalY);
+            
+            // 3. Setelah itu muncul teks janji (pertama kali)
+            revealJanjiText();
+            
+            // Efek tambahan: sedikit vibrasi kecil di hati (sentuhan)
+            const heartSvg = document.querySelector('.main-heart');
+            if (heartSvg) {
+                heartSvg.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    heartSvg.style.transform = 'scale(1)';
+                }, 150);
+            }
+            
+            // Efek denyut pada wrapper
+            const wrapper = document.querySelector('.heart-wrapper');
+            wrapper.style.transform = 'scale(0.96)';
+            setTimeout(() => {
+                wrapper.style.transform = 'scale(1)';
+            }, 150);
+            
+            // Juga jika sudah pernah muncul teks, biar tetap romantis setiap klik tetap ada love dan nama refresh
+            // bonus: kadang buat suara? tidak perlu, cukup visual.
+        }
+        
+        // Tambahkan event listener klik & sentuh
+        heartTrigger.addEventListener('click', (e) => {
+            onHeartClick(e);
+            // prevent default jika ada
+            e.stopPropagation();
+        });
+        
+        heartTrigger.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            onHeartClick(e);
+        });
+        
+        // inisiasi: pastikan teks janji belum terlihat dan nama container kosong, hint ada.
+        // supaya teks janji benar2 muncul setelah klik hati
+        janjiBox.classList.remove('show');
+        textRevealed = false;
+        
+        // background animasi subtle pada body (opsional)
+        // Juga tambahan: ketika halaman di-load, beri efek hati berdenyut pelan
+        const mainHeart = document.querySelector('.main-heart');
+        if (mainHeart) {
+            setInterval(() => {
+                if (!textRevealed) {
+                    // denyut lembut hanya sebelum pertama klik
+                    mainHeart.style.animation = 'pulseGlow 1s infinite alternate';
+                } else {
+                    mainHeart.style.animation = 'none';
+                }
+            }, 100);
+        }
+        
+        // Mencegah scroll saat sentuh di area hati agar tidak mengganggu
+        heartTrigger.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+        
+        // Juga untuk menambah kesan percintaan, ada fallback jika klik di area manapun di card? 
+        // tapi sesuai spesifikasi hanya hati yang di pencet memberikan semua efek. Namun teks muncul dan nama
+        // Kita jamin semua berjalan.
+        
+        // Untuk memastikan animasi love juga berfungsi baik di perangkat mobile, kita tambahkan gaya.
+        console.log(' Nanaw ️');
+        
+        // (Opsional) buat efek kilauan lembut pada background love card
+        const style = document.createElement('style');
+        style.textContent = `
+            .main-heart {
+                transition: transform 0.2s, filter 0.3s;
+            }
+            .heart-wrapper {
+                cursor: pointer;
+            }
+            @media (max-width: 550px) {
+                .janji-text {
+                    font-size: 1rem;
+                    padding: 14px 12px;
+                }
+                .pop-name {
+                    font-size: 2rem;
+                }
+                .main-heart {
+                    width: 110px;
+                    height: 110px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Bonus: buat efek hati juga ketika halaman pertama kali, menunjukkan interaksi.
+        // Tapi tidak menggangu.
+        // Untuk memenuhi "muncul nama nanaw pendek" setiap kali pencet, fungsi showNameNanaw akan selalu menghapus lalu menambah.
+        // Supaya jika user cepat2 klik, nama tetap muncul berulang dengan animasi segar. Bagus untuk kesan hidup.
+        // Set klik pertama, teks janji muncul. Klik seterusnya juga akan memunculkan love baru dan refresh nama, menambah banyak love.
+        // Sangat manis dan sesuai ekspektasi.
+        // Penyesuaian: karena di text ada kalimat "lalu abis itu muncul text", setelah klik teks akan muncul, dan tetap terlihat.
+        // Sekali muncul tidak akan hilang, karena sudah di-reveal.
+        // OK!
+        
+        // sedikit sentuhan: jika nama sudah pernah muncul dan di klik lagi, ada efek tambahan pada teks janji? tidak perlu.
+        // sempurna.
+    })();
+</script>
+</body>
+</html>
